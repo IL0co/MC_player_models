@@ -1,14 +1,7 @@
 #include <sourcemod>
-// #include <cstrike>
-#include <clientprefs>
 #include <sdktools>
 #include <sdkhooks>
 #include <mc_core>
-// #include <csgo_colors>
-
-#undef REQUIRE_PLUGIN
-// #tryinclude <shop>
-// #tryinclude <vip_core>
 
 #pragma newdecls required
 #pragma semicolon 1
