@@ -1,0 +1,20 @@
+"Phrases"
+{
+	"Any Player Models"
+	{
+		"ru"	"Скины игрока"
+		"en"	"Player skins"
+    }
+
+	"CT Player Models"
+	{
+		"ru"	"Скины игрока за КТ"
+		"en"	"CT player skins"
+    }
+	
+	"T Player Models"
+	{
+		"ru"	"Скины игрока за Т"
+		"en"	"T player skins"
+    }
+}
