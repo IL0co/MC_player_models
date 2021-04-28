@@ -21,7 +21,7 @@ public Action Event_PlayerSpawn(Event event, char[] name, bool dontBroadcast)
 		if((id == 1 && team != 2) || (id == 2 && team != 3))
 			continue;
 
-		if(!MC_GetClientActiveItem(client, g_PluginId[id], item, sizeof(item)))
+		if(!MC_GetClientActiveItem(client, g_PluginIndex[id], item, sizeof(item)))
 			continue;
 		
 		g_kvMain.Rewind();
@@ -39,13 +39,13 @@ public Action Event_PlayerSpawn(Event event, char[] name, bool dontBroadcast)
 		data.WriteCell(userid);
 		data.WriteCell(kv);
 
-		CreateTimer(kv.GetFloat("delay", g_fDelayTime), Timer_Delay_CreateBombDance, data, TIMER_DATA_HNDL_CLOSE|TIMER_FLAG_NO_MAPCHANGE);
+		CreateTimer(kv.GetFloat("delay", g_fDelayTime), Timer_Delay, data, TIMER_DATA_HNDL_CLOSE|TIMER_FLAG_NO_MAPCHANGE);
 
 		break;
 	}
 }
 
-public Action Timer_Delay_CreateBombDance(Handle timer, DataPack data)
+public Action Timer_Delay(Handle timer, DataPack data)
 {
 	data.Reset();
 	int client = GetClientOfUserId(data.ReadCell());

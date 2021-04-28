@@ -28,13 +28,13 @@ stock void Stock_SetClientModel(int client, KeyValues kv, bool isPreview)
 			for(int id; id < 4; id++)
 				Stock_KillEntity(g_iPreviewEntities[client][id]);
 
-			g_iPreviewEntities[client][0] = EntIndexToEntRef( Create_PreviewEntity_Model(client, team, kv, origin, ang));
-			g_iPreviewEntities[client][1] = EntIndexToEntRef( Create_PreviewEntity_Light(client, team, origin));
+			g_iPreviewEntities[client][0] = EntIndexToEntRef(Create_PreviewEntity_Model(client, team, kv, origin, ang));
+			g_iPreviewEntities[client][1] = EntIndexToEntRef(Create_PreviewEntity_Light(client, team, origin));
 
 			origin[2] += 100.0;
 
-			g_iPreviewEntities[client][2] = EntIndexToEntRef( Create_PreviewEntity_Model(client, team, kv, origin, ang));
-			g_iPreviewEntities[client][3] = EntIndexToEntRef( Create_PreviewEntity_Light(client, team, origin));
+			g_iPreviewEntities[client][2] = EntIndexToEntRef(Create_PreviewEntity_Model(client, team, kv, origin, ang));
+			g_iPreviewEntities[client][3] = EntIndexToEntRef(Create_PreviewEntity_Light(client, team, origin));
 
 			g_fPreviewLastTime[client] = kv.GetFloat("Preview time", g_fPreviewTime);
 			g_hPreviewTimerHandle[client] = CreateTimer(0.1, Timer_Preview, GetClientUserId(client), TIMER_DATA_HNDL_CLOSE|TIMER_FLAG_NO_MAPCHANGE|TIMER_REPEAT);

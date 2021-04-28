@@ -8,7 +8,7 @@
 
 public Plugin myinfo =
 {
-	name		= "[Multi-Core] Dance Bomb",
+	name		= "[Multi-Core] Player Models",
 	author	  	= "iLoco",
 	description = "",
 	version	 	= "0.0.1",
@@ -33,7 +33,7 @@ int g_iPreviewEntities[MAXPLAYERS+1][4];
 char g_cPluginsUniques[][] = {"Any Player Models", "T Player Models", "CT Player Models"};
 
 KeyValues g_kvMain;
-PluginId g_PluginId[sizeof(g_cPluginsUniques)];
+MC_PluginIndex g_PluginIndex[sizeof(g_cPluginsUniques)];
 
 float g_fPreviewTime;
 float g_fDelayTime;
@@ -67,13 +67,15 @@ public void MC_OnCoreChangeStatus(char[] core_name, MC_CoreTypeBits core_type, b
 	if(!isLoaded || core_type != Core_MultiCore)
 		return;
 
+	PrintToServer("load MC Core");
+
 	char buffer[256];
 
 	for(int id; id < sizeof(g_cPluginsUniques); id++)
 	{
 		g_kvMain.Rewind();
-		MC_RegisterPlugin(g_cPluginsUniques[id], CallBack_OnCategoryDisplay);
-
+		MC_RegisterPlugin(g_cPluginsUniques[id]);
+		MC_SetPluginCallBacks(CallBack_OnCategoryDisplay);
 
 		if(g_kvMain.JumpToKey(g_cPluginsUniques[id]) && g_kvMain.GotoFirstSubKey())
 		{
@@ -90,24 +92,24 @@ public void MC_OnCoreChangeStatus(char[] core_name, MC_CoreTypeBits core_type, b
 			while(g_kvMain.GotoNextKey());
 		}
 
-		g_PluginId[id] = MC_EndPlugin();
+		g_PluginIndex[id] = MC_EndPlugin();
 	}
 }
 
-public bool CallBack_OnCategoryDisplay(int client, const char[] plugin_unique, PluginId plugin_id, MC_CoreTypeBits core_type, char[] buffer, int maxlen)
+public bool CallBack_OnCategoryDisplay(int client, const char[] plugin_id, MC_PluginIndex plugin_index, MC_CoreTypeBits core_type, char[] buffer, int maxlen)
 {
-	if(!TranslationPhraseExists(plugin_unique))
+	if(!TranslationPhraseExists(plugin_id))
 		return false;
 
-	FormatEx(buffer, maxlen, "%T", plugin_unique, client);
+	FormatEx(buffer, maxlen, "%T", plugin_id, client);
 	return true;
 }
 
-public bool CallBack_OnItemDisplay(int client, const char[] plugin_unique, PluginId plugin_id, const char[] item_unique, MC_CoreTypeBits core_type, char[] buffer, int maxlen)
+public bool CallBack_OnItemDisplay(int client, const char[] plugin_id, MC_PluginIndex plugin_index, const char[] item_unique, MC_CoreTypeBits core_type, char[] buffer, int maxlen)
 {
 	g_kvMain.Rewind();
 
-	if(!g_kvMain.JumpToKey(plugin_unique))
+	if(!g_kvMain.JumpToKey(plugin_id))
 		return false;
 
 	if(!g_kvMain.JumpToKey(item_unique))
@@ -121,11 +123,11 @@ public bool CallBack_OnItemDisplay(int client, const char[] plugin_unique, Plugi
 	return true;
 }
 
-public void CallBack_OnItemPreview(int client, const char[] plugin_unique, PluginId plugin_id, const char[] item_unique, MC_CoreTypeBits core_type)
+public void CallBack_OnItemPreview(int client, const char[] plugin_id, MC_PluginIndex plugin_index, const char[] item_unique, MC_CoreTypeBits core_type)
 {
 	g_kvMain.Rewind();
 
-	if(g_kvMain.JumpToKey(plugin_unique) && g_kvMain.JumpToKey(item_unique))
+	if(g_kvMain.JumpToKey(plugin_id) && g_kvMain.JumpToKey(item_unique))
 	{
 		KeyValues kv = new KeyValues(item_unique);
 		KvCopySubkeys(g_kvMain, kv);
