@@ -5,7 +5,7 @@ public Action Event_PlayerSpawn(Event event, char[] name, bool dontBroadcast)
 	int userid = event.GetInt("userid");
 	int client = GetClientOfUserId(userid);
 
-	if(IsFakeClient(client))
+	if(!IsClientInGame(client) || IsFakeClient(client))
 		return;
 
 	int team = GetClientTeam(client);
