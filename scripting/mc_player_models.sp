@@ -134,7 +134,7 @@ public void CallBack_OnItemPreview(int client, const char[] plugin_id, MC_Plugin
 		KeyValues kv = new KeyValues(item_unique);
 		KvCopySubkeys(g_kvMain, kv);
 
-		Stock_SetClientModel(client, kv, true);
+		Stock_SetClientModel(client, kv, true, plugin_index);
 	}
 }
 

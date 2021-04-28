@@ -1,6 +1,6 @@
 #include <sourcemod>
 
-stock void Stock_SetClientModel(int client, KeyValues kv, bool isPreview)
+stock void Stock_SetClientModel(int client, KeyValues kv, bool isPreview, MC_PluginIndex plugin_index = INVALID_PLUGIN_INDEX)
 {
 	if(isPreview && !IsPlayerAlive(client))
 	{
@@ -15,29 +15,54 @@ stock void Stock_SetClientModel(int client, KeyValues kv, bool isPreview)
 
 		if(isPreview)
 		{
-			float ang[3], pos[3], origin[3];
-		
-			GetClientEyePosition(client, pos);
-			GetClientEyeAngles(client, ang);
-
-			TR_TraceRayFilter(pos, ang, MASK_SOLID, RayType_Infinite, TraceRayFilter_NoPlayers);
-			TR_GetEndPosition(origin);
-
-			origin[2] -= 50.0;
-
+			if(g_hPreviewTimerHandle[client])
+			{
+				delete g_hPreviewTimerHandle[client];
+				g_hPreviewTimerHandle[client] = null;
+			}
+			
 			for(int id; id < 4; id++)
 				Stock_KillEntity(g_iPreviewEntities[client][id]);
 
-			g_iPreviewEntities[client][0] = EntIndexToEntRef(Create_PreviewEntity_Model(client, team, kv, origin, ang));
-			g_iPreviewEntities[client][1] = EntIndexToEntRef(Create_PreviewEntity_Light(client, team, origin));
+			float ang[3], pos[3], origin[3], angle[3];
+		
+			GetClientEyePosition(client, pos);
+			GetClientEyeAngles(client, ang);
+			
+			angle[1] = ang[1] - 180.0;
+			ang[0] = 30.0;
 
-			origin[2] += 100.0;
+			if(g_PluginIndex[0] == plugin_index)
+			{
+				ang[1] -= 20.0;
+				angle[1] -= 20.0;
+				TR_TraceRayFilter(pos, ang, MASK_SOLID, RayType_Infinite, TraceRayFilter_NoPlayers);
+				TR_GetEndPosition(origin);
 
-			g_iPreviewEntities[client][2] = EntIndexToEntRef(Create_PreviewEntity_Model(client, team, kv, origin, ang));
-			g_iPreviewEntities[client][3] = EntIndexToEntRef(Create_PreviewEntity_Light(client, team, origin));
+				g_iPreviewEntities[client][0] = EntIndexToEntRef(Create_PreviewEntity_Model(client, 2, kv, origin, angle));
+				g_iPreviewEntities[client][1] = EntIndexToEntRef(Create_PreviewEntity_Light(client, 2, origin));
+
+				ang[1] += 40.0;
+				angle[1] += 40.0;
+				TR_TraceRayFilter(pos, ang, MASK_SOLID, RayType_Infinite, TraceRayFilter_NoPlayers);
+				TR_GetEndPosition(origin);
+
+				g_iPreviewEntities[client][2] = EntIndexToEntRef(Create_PreviewEntity_Model(client, 3, kv, origin, angle));
+				g_iPreviewEntities[client][3] = EntIndexToEntRef(Create_PreviewEntity_Light(client, 3, origin));
+			}
+			else
+			{
+				bool is_t_skin = view_as<bool>(g_PluginIndex[1] == plugin_index);
+				
+				TR_TraceRayFilter(pos, ang, MASK_SOLID, RayType_Infinite, TraceRayFilter_NoPlayers);
+				TR_GetEndPosition(origin);
+
+				g_iPreviewEntities[client][0] = EntIndexToEntRef(Create_PreviewEntity_Model(client, is_t_skin ? 2 : 3, kv, origin, angle));
+				g_iPreviewEntities[client][1] = EntIndexToEntRef(Create_PreviewEntity_Light(client, is_t_skin ? 2 : 3, origin));
+			}
 
 			g_fPreviewLastTime[client] = kv.GetFloat("Preview time", g_fPreviewTime);
-			g_hPreviewTimerHandle[client] = CreateTimer(0.1, Timer_Preview, GetClientUserId(client), TIMER_DATA_HNDL_CLOSE|TIMER_FLAG_NO_MAPCHANGE|TIMER_REPEAT);
+			g_hPreviewTimerHandle[client] = CreateTimer(0.1, Timer_Preview, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE|TIMER_REPEAT);
 		}
 		else
 		{	
@@ -55,7 +80,7 @@ stock void Stock_SetClientModel(int client, KeyValues kv, bool isPreview)
 	delete kv;
 }
 
-int Create_PreviewEntity_Model(int client, int team, KeyValues kv, float origin[3], float ang[3])
+int Create_PreviewEntity_Model(int client, int team, KeyValues kv, float origin[3], float angle[3])
 {
 	int model;
 
@@ -70,11 +95,11 @@ int Create_PreviewEntity_Model(int client, int team, KeyValues kv, float origin[
 		DispatchKeyValue(model, "targetname", TARGET_NAME_PREVIEW); 
 		SetEntProp(model, Prop_Send, "m_CollisionGroup", 0);
 		SetEntProp(model, Prop_Send, "m_nSolidType", 0);
-		DispatchKeyValue(model, "solid", "1");
+		DispatchKeyValue(model, "solid", "0");
 			
 		SetEntityMoveType(model, MOVETYPE_VPHYSICS);
 		
-		TeleportEntity(model, origin, ang, NULL_VECTOR);	// TODO: в DanceBomb тоже добавить ang
+		TeleportEntity(model, origin, angle, NULL_VECTOR);	// TODO: в DanceBomb тоже добавить ang
 		DispatchSpawn(model);
 
 		SetEntPropEnt(model, Prop_Send, "m_hOwnerEntity", client);
@@ -99,6 +124,8 @@ int Create_PreviewEntity_Light(int client, int team, float origin[3])
 
 		DispatchSpawn(light);
 		AcceptEntityInput(light, "TurnOn");
+
+		origin[2] += 5.0;
 		TeleportEntity(light, origin, NULL_VECTOR, NULL_VECTOR);
 
 		SetEntPropEnt(light, Prop_Send, "m_hOwnerEntity", client);
@@ -134,6 +161,8 @@ public Action Timer_Preview(Handle timer, int client)
 
 	for(int id; id < 4; id++)
 		Stock_KillEntity(g_iPreviewEntities[client][id]);
+
+	g_hPreviewTimerHandle[client] = null;
 
 	return Plugin_Stop;
 }
