@@ -68,12 +68,13 @@ public void MC_OnCoreChangeStatus(char[] core_name, MC_CoreTypeBits core_type, b
 	if(!isLoaded || core_type != Core_MultiCore)
 		return;
 
-	PrintToServer("load MC Core");
-
 	char buffer[256];
 
 	for(int id; id < sizeof(g_cPluginsUniques); id++)
 	{
+		if(MC_IsValidPluginUnique(g_cPluginsUniques[id]))
+			continue;
+
 		g_kvMain.Rewind();
 		MC_RegisterPlugin(g_cPluginsUniques[id]);
 		MC_SetPluginCallBacks(CallBack_OnCategoryDisplay);
