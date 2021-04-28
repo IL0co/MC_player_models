@@ -57,6 +57,7 @@ public void OnPluginStart()
 	HookEvent("player_team", Event_PlayerSpawn);
 
 	LoadTranslations("mc_player_models.phrases");
+	LoadTranslations("mc_core.phrases");
 
 	if(MC_IsCoreLoaded(Core_MultiCore))
 		MC_OnCoreChangeStatus("", Core_MultiCore, true);
