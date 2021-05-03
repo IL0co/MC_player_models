@@ -33,7 +33,6 @@ int g_iPreviewEntities[MAXPLAYERS+1][4];
 char g_cPluginsUniques[][] = {"Any Player Models", "T Player Models", "CT Player Models"};
 
 KeyValues g_kvMain;
-MC_PluginIndex g_PluginIndex[sizeof(g_cPluginsUniques)];
 
 float g_fPreviewTime;
 float g_fDelayTime;
@@ -59,15 +58,12 @@ public void OnPluginStart()
 	LoadTranslations("mc_player_models.phrases");
 	LoadTranslations("mc_core.phrases");
 
-	if(MC_IsCoreLoaded(Core_MultiCore))
-		MC_OnCoreChangeStatus("", Core_MultiCore, true);
+	if(MC_IsCoreLoaded())
+		MC_OnCoreLoaded();
 }
 
-public void MC_OnCoreChangeStatus(char[] core_name, MC_CoreTypeBits core_type, bool isLoaded)
+public void MC_OnCoreLoaded()
 {
-	if(!isLoaded || core_type != Core_MultiCore)
-		return;
-
 	char buffer[256];
 
 	for(int id; id < sizeof(g_cPluginsUniques); id++)
@@ -77,7 +73,7 @@ public void MC_OnCoreChangeStatus(char[] core_name, MC_CoreTypeBits core_type, b
 
 		g_kvMain.Rewind();
 		MC_RegisterPlugin(g_cPluginsUniques[id]);
-		MC_SetPluginCallBacks(CallBack_OnCategoryDisplay);
+		MC_SetPluginCallBacks(CallBack_OnPluginDisplay);
 
 		if(g_kvMain.JumpToKey(g_cPluginsUniques[id]) && g_kvMain.GotoFirstSubKey())
 		{
@@ -94,11 +90,11 @@ public void MC_OnCoreChangeStatus(char[] core_name, MC_CoreTypeBits core_type, b
 			while(g_kvMain.GotoNextKey());
 		}
 
-		g_PluginIndex[id] = MC_EndPlugin();
+		MC_EndPlugin();
 	}
 }
 
-public bool CallBack_OnCategoryDisplay(int client, const char[] plugin_id, MC_PluginIndex plugin_index, MC_CoreTypeBits core_type, char[] buffer, int maxlen)
+public bool CallBack_OnPluginDisplay(int client, const char[] plugin_id, char[] core_type, char[] buffer, int maxlen)
 {
 	if(!TranslationPhraseExists(plugin_id))
 		return false;
@@ -107,7 +103,7 @@ public bool CallBack_OnCategoryDisplay(int client, const char[] plugin_id, MC_Pl
 	return true;
 }
 
-public bool CallBack_OnItemDisplay(int client, const char[] plugin_id, MC_PluginIndex plugin_index, const char[] item_unique, MC_CoreTypeBits core_type, char[] buffer, int maxlen)
+public bool CallBack_OnItemDisplay(int client, const char[] plugin_id, const char[] item_unique, char[] core_type, char[] buffer, int maxlen)
 {
 	g_kvMain.Rewind();
 
@@ -125,7 +121,7 @@ public bool CallBack_OnItemDisplay(int client, const char[] plugin_id, MC_Plugin
 	return true;
 }
 
-public void CallBack_OnItemPreview(int client, const char[] plugin_id, MC_PluginIndex plugin_index, const char[] item_unique, MC_CoreTypeBits core_type)
+public void CallBack_OnItemPreview(int client, const char[] plugin_id, const char[] item_unique, char[] core_type)
 {
 	g_kvMain.Rewind();
 
@@ -134,7 +130,7 @@ public void CallBack_OnItemPreview(int client, const char[] plugin_id, MC_Plugin
 		KeyValues kv = new KeyValues(item_unique);
 		KvCopySubkeys(g_kvMain, kv);
 
-		Stock_SetClientModel(client, kv, true, plugin_index);
+		Stock_SetClientModel(client, kv, true, plugin_id);
 	}
 }
 

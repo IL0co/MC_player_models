@@ -21,7 +21,7 @@ public Action Event_PlayerSpawn(Event event, char[] name, bool dontBroadcast)
 		if((id == 1 && team != 2) || (id == 2 && team != 3))
 			continue;
 
-		if(!MC_GetClientActiveItem(client, g_PluginIndex[id], item, sizeof(item)))
+		if(!MC_GetClientActiveItem(client, g_cPluginsUniques[id], item, sizeof(item)))
 			continue;
 		
 		g_kvMain.Rewind();
@@ -38,6 +38,7 @@ public Action Event_PlayerSpawn(Event event, char[] name, bool dontBroadcast)
 		DataPack data = new DataPack();
 		data.WriteCell(userid);
 		data.WriteCell(kv);
+		data.WriteString(g_cPluginsUniques[id]);
 
 		CreateTimer(kv.GetFloat("delay", g_fDelayTime), Timer_Delay, data, TIMER_DATA_HNDL_CLOSE|TIMER_FLAG_NO_MAPCHANGE);
 
@@ -51,7 +52,10 @@ public Action Timer_Delay(Handle timer, DataPack data)
 	int client = GetClientOfUserId(data.ReadCell());
 	KeyValues kv = data.ReadCell();
 
-	Stock_SetClientModel(client, kv, false);
+	char plugin_id[MAX_UNIQUE_LENGTH];
+	data.ReadString(plugin_id, sizeof(plugin_id));
+
+	Stock_SetClientModel(client, kv, false, plugin_id);
 
 	return Plugin_Stop;
 }

@@ -1,80 +1,77 @@
 #include <sourcemod>
 
-stock void Stock_SetClientModel(int client, KeyValues kv, bool isPreview, MC_PluginIndex plugin_index = INVALID_PLUGIN_INDEX)
+stock void Stock_SetClientModel(int client, KeyValues kv, bool isPreview, const char[] plugin_id)
 {
-	if(isPreview && !IsPlayerAlive(client))
+	if((isPreview && !IsPlayerAlive(client)) || !client || !IsClientInGame(client))
 	{
 		delete kv;
 		return;
 	}
 
-	if(client && IsClientInGame(client))
+	int team = GetClientTeam(client);
+	char buff[256];
+
+	if(isPreview)
 	{
-		int team = GetClientTeam(client);
-		char buff[256];
-
-		if(isPreview)
+		if(g_hPreviewTimerHandle[client])
 		{
-			if(g_hPreviewTimerHandle[client])
-			{
-				delete g_hPreviewTimerHandle[client];
-				g_hPreviewTimerHandle[client] = null;
-			}
-			
-			for(int id; id < 4; id++)
-				Stock_KillEntity(g_iPreviewEntities[client][id]);
-
-			float ang[3], pos[3], origin[3], angle[3];
+			delete g_hPreviewTimerHandle[client];
+			g_hPreviewTimerHandle[client] = null;
+		}
 		
-			GetClientEyePosition(client, pos);
-			GetClientEyeAngles(client, ang);
-			
-			angle[1] = ang[1] - 180.0;
-			ang[0] = 30.0;
+		for(int id; id < 4; id++)
+			Stock_KillEntity(g_iPreviewEntities[client][id]);
 
-			if(g_PluginIndex[0] == plugin_index)
-			{
-				ang[1] -= 20.0;
-				angle[1] -= 20.0;
-				TR_TraceRayFilter(pos, ang, MASK_SOLID, RayType_Infinite, TraceRayFilter_NoPlayers);
-				TR_GetEndPosition(origin);
+		float ang[3], pos[3], origin[3], angle[3];
+	
+		GetClientEyePosition(client, pos);
+		GetClientEyeAngles(client, ang);
+		
+		angle[1] = ang[1] - 180.0;
+		ang[0] = 30.0;
 
-				g_iPreviewEntities[client][0] = EntIndexToEntRef(Create_PreviewEntity_Model(client, 2, kv, origin, angle));
-				g_iPreviewEntities[client][1] = EntIndexToEntRef(Create_PreviewEntity_Light(client, 2, origin));
+		if(strcmp(g_cPluginsUniques[0], plugin_id, false) == 0)
+		{
+			ang[1] -= 20.0;
+			angle[1] -= 20.0;
+			TR_TraceRayFilter(pos, ang, MASK_SOLID, RayType_Infinite, TraceRayFilter_NoPlayers);
+			TR_GetEndPosition(origin);
 
-				ang[1] += 40.0;
-				angle[1] += 40.0;
-				TR_TraceRayFilter(pos, ang, MASK_SOLID, RayType_Infinite, TraceRayFilter_NoPlayers);
-				TR_GetEndPosition(origin);
+			g_iPreviewEntities[client][0] = EntIndexToEntRef(Create_PreviewEntity_Model(client, 2, kv, origin, angle));
+			g_iPreviewEntities[client][1] = EntIndexToEntRef(Create_PreviewEntity_Light(client, 2, origin));
 
-				g_iPreviewEntities[client][2] = EntIndexToEntRef(Create_PreviewEntity_Model(client, 3, kv, origin, angle));
-				g_iPreviewEntities[client][3] = EntIndexToEntRef(Create_PreviewEntity_Light(client, 3, origin));
-			}
-			else
-			{
-				bool is_t_skin = view_as<bool>(g_PluginIndex[1] == plugin_index);
-				
-				TR_TraceRayFilter(pos, ang, MASK_SOLID, RayType_Infinite, TraceRayFilter_NoPlayers);
-				TR_GetEndPosition(origin);
+			ang[1] += 40.0;
+			angle[1] += 40.0;
+			TR_TraceRayFilter(pos, ang, MASK_SOLID, RayType_Infinite, TraceRayFilter_NoPlayers);
+			TR_GetEndPosition(origin);
 
-				g_iPreviewEntities[client][0] = EntIndexToEntRef(Create_PreviewEntity_Model(client, is_t_skin ? 2 : 3, kv, origin, angle));
-				g_iPreviewEntities[client][1] = EntIndexToEntRef(Create_PreviewEntity_Light(client, is_t_skin ? 2 : 3, origin));
-			}
-
-			g_fPreviewLastTime[client] = kv.GetFloat("Preview time", g_fPreviewTime);
-			g_hPreviewTimerHandle[client] = CreateTimer(0.1, Timer_Preview, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE|TIMER_REPEAT);
+			g_iPreviewEntities[client][2] = EntIndexToEntRef(Create_PreviewEntity_Model(client, 3, kv, origin, angle));
+			g_iPreviewEntities[client][3] = EntIndexToEntRef(Create_PreviewEntity_Light(client, 3, origin));
 		}
 		else
-		{	
-			kv.GetString(team == 3 ? "CT Model" : "T Model", buff, sizeof(buff));
-			SetEntityModel(client, buff);
+		{
+			bool is_t_skin = (strcmp(g_cPluginsUniques[1], plugin_id, false) == 0);
 			
-			kv.GetString(team == 3 ? "CT Arms" : "T Arms", buff, sizeof(buff));
-			if(buff[0] && strcmp(buff[FindCharInString(buff, '.', true) + 1], "mdl", false) == 0) 
-				SetEntPropString(client, Prop_Send, "m_szArmsModel", buff);
-			
-			Set_Color(client, team == 3 ? "CT Color" : "T Color", kv);
+			TR_TraceRayFilter(pos, ang, MASK_SOLID, RayType_Infinite, TraceRayFilter_NoPlayers);
+			TR_GetEndPosition(origin);
+
+			g_iPreviewEntities[client][0] = EntIndexToEntRef(Create_PreviewEntity_Model(client, is_t_skin ? 2 : 3, kv, origin, angle));
+			g_iPreviewEntities[client][1] = EntIndexToEntRef(Create_PreviewEntity_Light(client, is_t_skin ? 2 : 3, origin));
 		}
+
+		g_fPreviewLastTime[client] = kv.GetFloat("Preview time", g_fPreviewTime);
+		g_hPreviewTimerHandle[client] = CreateTimer(0.1, Timer_Preview, GetClientUserId(client), TIMER_FLAG_NO_MAPCHANGE|TIMER_REPEAT);
+	}
+	else
+	{	
+		kv.GetString(team == 3 ? "CT Model" : "T Model", buff, sizeof(buff));
+		SetEntityModel(client, buff);
+		
+		kv.GetString(team == 3 ? "CT Arms" : "T Arms", buff, sizeof(buff));
+		if(buff[0] && strcmp(buff[FindCharInString(buff, '.', true) + 1], "mdl", false) == 0) 
+			SetEntPropString(client, Prop_Send, "m_szArmsModel", buff);
+		
+		Set_Color(client, team == 3 ? "CT Color" : "T Color", kv);
 	}
 
 	delete kv;
